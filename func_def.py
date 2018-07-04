@@ -610,29 +610,85 @@ class Setting_window():
         self.common_label_for_setting.common_label('当前值',0,1,10,'raised')
         self.common_label_for_setting.common_label('备注信息',0,2,75,'raised')
         self.dict = {}
+        self.sql_sys_setting_namelist = []
+        self.sql_rec_setting_namelist = []
+        self.sql_inv_setting_namelist = []
+        self.sql_bat_setting_namelist = []
         
         for i in range(int(object_cfg_tool.Pick_Option_In_Section(name_num,0,0))):
+            
+            #参数名称加载
             self.Sysdata_name = object_cfg_tool.Pick_Option_In_Section(name_list,i,1)
             self.common_label_for_setting.common_label(self.Sysdata_name,i+1,0,23,'groove')
-        for i in range(int(object_cfg_tool.Pick_Option_In_Section(name_num,0,0))):
-            self.Sysdata_name = object_cfg_tool.Pick_Option_In_Section(name_list,i,5)      ###！注意这个5可能会变
-            self.common_label_for_setting.common_label(self.Sysdata_name,i+1,2,75,'groove')
-        for i in range(int(object_cfg_tool.Pick_Option_In_Section(name_num,0,0))):
+            #备注加载
+            self.Sysdata_remark = object_cfg_tool.Pick_Option_In_Section(name_list,i,5)      ###！注意这个5可能会变
+            self.common_label_for_setting.common_label(self.Sysdata_remark,i+1,2,75,'groove')
+            #当前值设置为stringvar并加载
             self.dict['%s%s'%('variable',str(i))] = tk.StringVar()
-            self.common_label_for_setting.common_label_for_modify(self.dict['%s%s'%('variable',str(i))],i+1,1,10,'groove',object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1),i,self.name_list)   
+            self.common_label_for_setting.common_label_for_modify(self.dict['%s%s'%('variable',str(i))],i+1,1,10,'groove',object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1),i,self.name_list)
+            #id、参数、备注写入append到临时数组
+            if share_variable.setting_window_name == 'sys':
+                self.sql_sys_setting_namelist.append([i,self.Sysdata_name,self.Sysdata_remark])
+            elif share_variable.setting_window_name == 'rec':
+                self.sql_rec_setting_namelist.append([i,self.Sysdata_name,self.Sysdata_remark])
+            elif share_variable.setting_window_name == 'inv':
+                self.sql_inv_setting_namelist.append([i,self.Sysdata_name,self.Sysdata_remark])
+            elif share_variable.setting_window_name == 'bat':
+                self.sql_bat_setting_namelist.append([i,self.Sysdata_name,self.Sysdata_remark])
+        #id、参数、备注写入sql
+        if share_variable.setting_window_name == 'sys':
+            sql.config_sys_setting_init(self.sql_sys_setting_namelist)
+        elif share_variable.setting_window_name == 'rec':
+            sql.config_rec_setting_init(self.sql_rec_setting_namelist)
+        elif share_variable.setting_window_name == 'inv':
+            sql.config_inv_setting_init(self.sql_inv_setting_namelist)
+        elif share_variable.setting_window_name == 'bat':
+            sql.config_bat_setting_init(self.sql_bat_setting_namelist)
+                
     def reflash_data(self,getting_value_title,got_value_title,receive_protocol_str):
+        self.sql_sys_setting_valuelist = []
+        self.sql_rec_setting_valuelist = []
+        self.sql_inv_setting_valuelist = []
+        self.sql_bat_setting_valuelist = []
         self.receive_protocol_str = receive_protocol_str
         if self.receive_protocol_str == '':
             self.setting_win.title(getting_value_title)
             for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+               #stringvar赋值
                self.dict['%s%s'%('variable',str(i))].set('\\')
+               #值写入临时数组
+               if share_variable.setting_window_name == 'sys':
+                   self.sql_sys_setting_valuelist.append([i,'\\'])
+               elif share_variable.setting_window_name == 'rec':
+                   self.sql_rec_setting_valuelist.append([i,'\\'])
+               elif share_variable.setting_window_name == 'inv':
+                   self.sql_inv_setting_valuelist.append([i,'\\'])
+               elif share_variable.setting_window_name == 'bat':
+                   self.sql_bat_setting_valuelist.append([i,'\\'])
+               
         else:
             self.setting_win.title(got_value_title)
             self.sysdata_return_list = protocol_sysdata.analysis_protocol(self.receive_protocol_str)
-            print("self.sysdata_return_list",self.sysdata_return_list)
+            #print("self.sysdata_return_list",self.sysdata_return_list)
             for i in range(len(self.sysdata_return_list)-2):
                 self.dict['%s%s'%('variable',str(i))].set(self.sysdata_return_list[i])
-    
+                if share_variable.setting_window_name == 'sys':
+                   self.sql_sys_setting_valuelist.append([i,self.sysdata_return_list[i]])
+                elif share_variable.setting_window_name == 'rec':
+                   self.sql_rec_setting_valuelist.append([i,self.sysdata_return_list[i]])
+                elif share_variable.setting_window_name == 'inv':
+                   self.sql_inv_setting_valuelist.append([i,self.sysdata_return_list[i]])
+                elif share_variable.setting_window_name == 'bat':
+                   self.sql_bat_setting_valuelist.append([i,self.sysdata_return_list[i]])
+                   
+        if share_variable.setting_window_name == 'sys':
+            sql.config_sys_setting(self.sql_sys_setting_valuelist)
+        elif share_variable.setting_window_name == 'rec':
+            sql.config_rec_setting(self.sql_rec_setting_valuelist)
+        elif share_variable.setting_window_name == 'inv':
+            sql.config_inv_setting(self.sql_inv_setting_valuelist)
+        elif share_variable.setting_window_name == 'bat':
+            sql.config_bat_setting(self.sql_bat_setting_valuelist)
 
 
 '''
@@ -676,22 +732,34 @@ class Switching_Value_Window():
         self.common_label_win.common_label('开关量状态',0,1,20,'raised')
         self.switch_win.protocol('WM_DELETE_WINDOW',self.close_win)
         self.dict = {}
+        self.sql_switching_namelist = []
+        '''循环读取cfg中开关量名称并加载到后台，同时写入数据库'''
         for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+            #开关量名称加载
             self.Switching_Value_name = object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1)
             self.common_label_win.common_label(self.Switching_Value_name,i+1,0,20,'groove')
-        for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+            #开关量值stringvar并加载
             self.dict['%s%s'%('variable',str(i))] = tk.StringVar()
             self.common_label_win.common_label_strvar(self.dict['%s%s'%('variable',str(i))],i+1,1,20,'groove')
+            #存入sql
+            self.sql_switching_namelist.append([self.Switching_Value_name,i])
+        sql.config_switching_value_init(self.sql_switching_namelist)
+        '''循环读取开关量数据并加载到后台'''
+           
     def reflash_switching_value(self):
+        self.sql_switching_valuelist = []
         if share_variable.receive_switch_data_str == '':
             self.switch_win.title('开关量状态-正在获取数据')
             for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
                self.dict['%s%s'%('variable',str(i))].set('\\')
+               self.sql_switching_valuelist.append(['\\',object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1)])
         else:
             self.switch_win.title('开关量状态-已获取数据')
             self.switching_value_return_list = protocol_switch.analysis_protocol(share_variable.receive_switch_data_str)
             for i in range(len(self.switching_value_return_list)):
                self.dict['%s%s'%('variable',str(i))].set(self.switching_value_return_list[i])
+               self.sql_switching_valuelist.append([self.switching_value_return_list[i],i])
+        sql.config_switching_value(self.sql_switching_valuelist)
     def close_win(self):
         share_variable.switching_window_name = ''
         self.switch_win.destroy()
@@ -707,6 +775,7 @@ class Warning_Value_Window():
         self.list_for_menu = ['告警量part1名称','告警量part1状态','告警量part2名称','告警量part2状态',
                     '告警量part3名称','告警量part3状态','告警量part4名称','告警量part4状态',]
         self.dict = {}  #用于动态变量批量处理(批量赋值Stringvar)
+        self.sql_warning_namelist = []
         for i in range(len(self.list_for_menu)):
             self.common_label_win_top.common_label(self.list_for_menu[i],0,i,20,'raised')
         
@@ -715,21 +784,25 @@ class Warning_Value_Window():
         self.range_length = range(17)
         for i in range(4):
             for j in self.range_length:
+                #告警量名称加载
                 self.warning_Value_name = object_cfg_tool.Pick_Option_In_Section(self.warning_value_name_sections[i],j,1)
                 self.common_label_win_top.common_label(self.warning_Value_name,j+1,2*i,20,'groove')
-        for i in range(4):                     #外部循环section
-               for j in self.range_length:                #内部循环section的option并赋值
-                   self.dict['%s%s%s'%('variable',str(i),str(j))] = tk.StringVar()
-                   self.common_label_win_top.common_label_strvar(self.dict['%s%s%s'%('variable',str(i),str(j))],j+1,2*i+1,20,'groove')
+                #告警量值加载
+                self.dict['%s%s%s'%('variable',str(i),str(j))] = tk.StringVar()
+                self.common_label_win_top.common_label_strvar(self.dict['%s%s%s'%('variable',str(i),str(j))],j+1,2*i+1,20,'groove')
+                
+                self.sql_warning_namelist.append([self.warning_Value_name,j+i*17])
+        sql.config_warning_value_init(self.sql_warning_namelist)                 
         self.warning_win.protocol('WM_DELETE_WINDOW',self.close_win)
         
-    def reflash_Warning_value(self):  
-       if share_variable.receive_warning_data_str == '':
-           self.warning_win.title('告警量状态-正在获取数据')
-           for i in range(4):                     #外部循环section
-               for j in self.range_length:                #内部循环section的option并赋值
-                   self.dict['%s%s%s'%('variable',str(i),str(j))].set('\\')
-       else:
+    def reflash_Warning_value(self):
+        self.sql_warning_valuelist = []
+        if share_variable.receive_warning_data_str == '':
+            self.warning_win.title('告警量状态-正在获取数据')
+            for i in range(4):                     #外部循环section
+                for j in self.range_length:                #内部循环section的option并赋值
+                    self.dict['%s%s%s'%('variable',str(i),str(j))].set('\\')
+        else:
             self.warning_win.title('告警量状态-已获取数据')
             self.warning_value_return_list = protocol_warning.analysis_protocol(share_variable.receive_warning_data_str)
             self.warning_value_return_part1 = self.warning_value_return_list[:17]
@@ -742,6 +815,8 @@ class Warning_Value_Window():
             for i in range(4):                     #外部循环section
                for j in self.range_length:                #内部循环section的option并赋值
                    self.dict['%s%s%s'%('variable',str(i),str(j))].set(self.warning_value_return_part_list[i][j])
+                   self.sql_warning_valuelist.append([self.warning_value_return_part_list[i][j],j+i*17])
+            sql.config_warning_value(self.sql_warning_valuelist)
     def close_win(self):
         share_variable.warning_window_name = ''
         self.warning_win.destroy()
@@ -805,7 +880,7 @@ class set_analog_quantity():
         #字典用于对应位置
         #key:对应的值的名称 value=[框架，行，列]
         self.common_label_dict_41 = {
-                             '~输入线电压(V)':[self.frame2,1,2],
+                             '输入线电压(V)':[self.frame2,1,2],
                              'B相输入线电压(V)':[self.frame2,1,3],
                              'C相输入线电压(V)':[self.frame2,1,4],
                              '输出相电压(V)':[self.frame2,8,2],
@@ -816,13 +891,13 @@ class set_analog_quantity():
                              '电池容量(%)':[self.frame3,5,2],
                                    }
         self.common_label_dict_90 = {
-                             '~输入滤波器电流(A)':[self.frame2,22,2],
+                             '输入滤波器电流(A)':[self.frame2,22,2],
                              'B相输入滤波器电流(A)':[self.frame2,22,3],
                              'C相输入滤波器电流(A)':[self.frame2,22,4],
-                             '~6p整流器相电流(A)':[self.frame2,23,2],
+                             '6p整流器相电流(A)':[self.frame2,23,2],
                              'B相6p整流器相电流(A)':[self.frame2,23,3],
                              'C相6p整流器相电流(A)':[self.frame2,23,4],
-                             '~12p整流器相电流(A)':[self.frame2,24,2],
+                             '12p整流器相电流(A)':[self.frame2,24,2],
                              'B相12p整流器相电流(A)':[self.frame2,24,3],
                              'C相12p整流器相电流(A)':[self.frame2,24,4],
                              '逆变相电压(V)':[self.frame2,25,2],
@@ -840,7 +915,7 @@ class set_analog_quantity():
                              'UPS序列号':[self.frame3,22,2]
                                     }
         self.common_label_dict_81 = {
-                             '~输入相电流(A)':[self.frame2,2,2],
+                             '输入相电流(A)':[self.frame2,2,2],
                              'B相输入相电流(A)':[self.frame2,2,3],
                              'C相输入相电流(A)':[self.frame2,2,4],
                              '输入频率(Hz)':[self.frame2,3,2],
@@ -899,22 +974,22 @@ class set_analog_quantity():
         elif len(common_label_dict) == 22:
             for j in range(22):
                 self.dict['%s%s%s'%('variable','1',str(j))].set(common_label_dict[j])
-                sql_data.append([common_label_dict[j]])
+                sql_data.append([common_label_dict[j],list(self.common_label_dict_list[1].keys())[j]])
             sql.config_analog_quantity(sql_data)
         elif len(common_label_dict) == 12:
             for j in range(12):
                 self.dict['%s%s%s'%('variable','2',str(j))].set(common_label_dict[j])
-                sql_data.append([common_label_dict[j]])
+                sql_data.append([common_label_dict[j],list(self.common_label_dict_list[2].keys())[j]])
             sql.config_analog_quantity(sql_data)
         elif len(common_label_dict) == 5:
             for j in range(5):
                 self.dict['%s%s%s'%('variable','3',str(j))].set(common_label_dict[j])
-                sql_data.append([common_label_dict[j]])
+                sql_data.append([common_label_dict[j],list(self.common_label_dict_list[3].keys())[j]])
             sql.config_analog_quantity(sql_data)
         elif len(common_label_dict) == 6:
             for j in range(6):
                 self.dict['%s%s%s'%('variable','4',str(j))].set(common_label_dict[j])
-                sql_data.append([common_label_dict[j]])
+                sql_data.append([common_label_dict[j],list(self.common_label_dict_list[4].keys())[j]])
             sql.config_analog_quantity(sql_data)
 def request_for_history_event():
     share_variable.polling_status = '3'
@@ -1111,9 +1186,23 @@ class send_message():
             self.massage = self.assemble_command_for_quantity('%s%s%s'%(min_str,self.res_0,self.data_0))
             return self.massage
         
-        
+      
         '''组成完整命令并发送'''
     def assemble_commmand_and_send(self):
+        '''判断setting_command表状态'''
+        if sql.get_setting_status() != '':
+            share_variable.polling_status = '1'
+            self.setting_command = sql.get_setting_status()
+            if self.setting_command[0] == 'volt':
+                share_variable.res = float_2_hex_2_com(int(self.setting_command[1]))
+                share_variable.Sysdata_0 = 'A1'
+                sql.update_setting_status(['volt',0])
+            elif self.setting_command[0] == 'freq':
+                share_variable.res = float_2_hex_2_com(int(self.setting_command[1]))
+                share_variable.Sysdata_0 = 'A2'
+                sql.update_setting_status(['freq',0])
+        else:
+            pass
         self.res = share_variable.res
         self.Sysdata_0 = share_variable.Sysdata_0
         self.res_rec = share_variable.res_rec
@@ -1248,53 +1337,53 @@ class send_message():
         elif self.status == '4':
             
             if  share_variable.fault_status == 'rec1':
-                print('f1')
+                #print('f1')
                 share_variable.Device_CID2 = 'A3'
                 self.ser.write(self.massage_A3_Rec.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'整流故障记录请求,send:',self.massage_A3_Rec)
                 share_variable.fault_status = 'inv1'   #日志记录完成后，更改故障状态至逆变
                 share_variable.fault_file_status = 'Rec1'   #文件保存名称暂存
             elif  share_variable.fault_status == 'inv1':
-                print('f2')
+                #print('f2')
                 self.ser.write(self.massage_A3_Inv.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'逆变故障记录请求,send:',self.massage_A3_Inv)
                 share_variable.Device_CID2 = 'A4'
                 share_variable.fault_status = 'rec2'
                 share_variable.fault_file_status = 'Inv1'
             elif share_variable.fault_status == 'rec2':
-                print('f3')
+                #print('f3')
                 self.ser.write(self.massage_A4_Rec.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'整流故障记录请求,send:',self.massage_A4_Rec)
                 share_variable.fault_status = 'inv2'
                 share_variable.fault_file_status = 'Rec2'
             elif share_variable.fault_status == 'inv2':
-                print('f4')
+                #print('f4')
                 self.ser.write(self.massage_A4_Inv.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'逆变故障记录请求,send:',self.massage_A4_Inv)
                 share_variable.Device_CID2 = 'A5'
                 share_variable.fault_status = 'rec3'
                 share_variable.fault_file_status = 'Inv2'
             elif share_variable.fault_status == 'rec3':
-                print('f5')
+                #print('f5')
                 self.ser.write(self.massage_A5_Rec.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'整流故障记录请求,send:',self.massage_A5_Rec)
                 share_variable.fault_status = 'inv3'
                 share_variable.fault_file_status = 'Rec3'
             elif share_variable.fault_status == 'inv3':
-                print('f6')
+                #print('f6')
                 self.ser.write(self.massage_A5_Inv.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'逆变故障记录请求,send:',self.massage_A5_Inv)
                 share_variable.Device_CID2 = 'A6'
                 share_variable.fault_status = 'rec4'
                 share_variable.fault_file_status = 'Inv3'
             elif share_variable.fault_status == 'rec4':
-                print('f7')
+                #print('f7')
                 self.ser.write(self.massage_A6_Rec.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'整流故障记录请求,send:',self.massage_A6_Rec)
                 share_variable.fault_status = 'inv4'
                 share_variable.fault_file_status = 'Rec4'
             elif share_variable.fault_status == 'inv4':
-                print('f8')
+                #print('f8')
                 self.ser.write(self.massage_A6_Inv.encode())
                 self.logging.print_the_logging(share_variable.Device_CID2,'逆变故障记录请求,send:',self.massage_A6_Inv)
                 share_variable.Device_CID2 = ''
@@ -1303,6 +1392,7 @@ class send_message():
             '''设置量下发命令区'''   
         elif massage_list_1[0] != '0' and self.status == '1':
             share_variable.Device_CID2 = '97'
+            print('command:',massage_list_1[0])
             self.ser.write(massage_list_1[0].encode())
             self.logging.print_the_logging(share_variable.Device_CID2,'系统调试参数命令下发,send:',massage_list_1[0])
         elif massage_list_1[1] != '0' and self.status == '1':
