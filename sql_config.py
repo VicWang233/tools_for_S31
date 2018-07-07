@@ -272,12 +272,18 @@ class set_data_2_sql():
     def get_setting_status(self):
         '''筛选status == 1的命令,不是全部筛选，出来，遇到有为1的即返回，如果有多个，排队进入97命令修改'''
         lock.acquire(True)
-        setting_command_list = list(self.cursor.execute('SELECT * FROM setting_command ORDER BY name'))
-        for setting_command in setting_command_list:
-            if setting_command[2] == 1:
-                print(setting_command)
-                lock.release()
-                return setting_command
+        self.cursor.execute('SELECT * FROM setting_command WHERE name = ?',('password',))
+        password_list = self.cursor.fetchall()
+        if password_list[0][2] == 1:
+            lock.release()
+            return password_list
+        else:
+            setting_command_list = list(self.cursor.execute('SELECT * FROM setting_command ORDER BY name'))
+            for setting_command in setting_command_list:
+                if setting_command[2] == 1:
+                    print(setting_command)
+                    lock.release()
+                    return setting_command
         lock.release()
         return ''
     
@@ -292,7 +298,24 @@ class set_data_2_sql():
             print("Error occurred in update_setting_status:%s"%err)
         finally:
             lock.release()
-        self.conn.commit()       
+        self.conn.commit()   
+        
+    '''清空所有值(关闭后台时触发)'''
+    def clear_all_value(self):
+        try:
+            lock.acquire(True)
+            self.cursor.executemany('UPDATE analogtable_41 SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_90 SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_81 SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_82 SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_83 SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_switching_name SET item=?',[('/',)])
+            self.cursor.executemany('UPDATE analogtable_warning_name SET item=?',[('/',)])
+        except sqlite3.Error as err:
+            print("Error occurred in clear_all_value:%s"%err)
+        finally:
+            lock.release()
+        self.conn.commit() 
 #set_data_2_sql = set_data_2_sql()
 #set_data_2_sql.config_analog_quantity_init([['系统输出有功功率',42343242,312321],['系统输出无功功率',42343242,312321],
 #['系统输出视在功率',42343242,312321],['电池电流',42343242,312321],['后备时间',42343242,312321]])

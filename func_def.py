@@ -52,12 +52,14 @@ import csv
 '''
 sql = sql_config.set_data_2_sql()
 
+
 '''
 窗口毁灭函数，后面有两次触发，一次点击x，一次点击第一列下拉菜单的退出按钮
 '''
 def destory(parent):
-        parent.destroy()
-        os._exit(0) 
+    sql.clear_all_value()
+    parent.destroy()
+    os._exit(0) 
 '''
 -------------------------------------------------------------------------------
 文件类函数定义
@@ -75,9 +77,9 @@ class cfg_tool(ConfigParser):           #继承父类
         self.sections = self.conf.sections()
       
     def Pick_Section_number(self,section_num_you_choose):
-        for i in range(len(self.sections)):                          #循环找出对应的section
-            if self.sections[i] == section_num_you_choose:
-                return int(self.conf.options(self.sections[i])[0])
+        for section in self.sections:                          #循环找出对应的section
+            if section == section_num_you_choose:
+                return int(self.conf.options(section)[0])
         
     '''
     section_you_choose:你选择的section，格式为字符串
@@ -90,7 +92,7 @@ class cfg_tool(ConfigParser):           #继承父类
                 if option == 'a' or option == 'b' or option == 'c':
                     return ''
                 else:
-                    if type(args) == type('1'):
+                    if isinstance(args,(str)):
                         option = args
                         print(option)
                     else:
@@ -337,16 +339,6 @@ def data_split(protocol_str,protocol_option):
         return 0
 
     protocol_Drop_startbit = protocol.split("~")[1]   #split掉“~”
-    protocol_ver = ''   #版本
-    protocol_adr = ''    #设备号
-    protocol_CID1 = ''   #CID1
-    protocol_CID2 = ''   #CID2
-    protocol_lchksum = ''   #LENGTH的lchksum
-    protocol_length = ''    #LENGTH的LENID
-    protocol_chksum = ''    #CHKSUM
-    protocol_info = ''
-    protocol_dataflag = ''
-    protocol_data_number = ''
     protocol_CID2_dict = {
                           '00':'状态正常',
                           '01':'VER错',
@@ -359,60 +351,33 @@ def data_split(protocol_str,protocol_option):
                           '81':'操作失败',
                           '82':'存储芯片故障'
                           }
-
-    for i in range(len(protocol_Drop_startbit)):
-        if i<2:
-            protocol_ver+=protocol_Drop_startbit[i]    #挑出版本
-            if i == 1 and protocol_option == 'VER':
-                return protocol_ver
-        elif 2<=i<=3:
-            protocol_adr+=protocol_Drop_startbit[i]    #挑出设备号，目前写死了默认只有两位
-            if i == 3 and protocol_option == 'ADR':
-                return protocol_adr
-        elif 4<=i<=5:
-            protocol_CID1+=protocol_Drop_startbit[i]    #挑出CID1
-            if i == 5 and protocol_option == 'CID1':
-                return protocol_CID1
-        elif 6<=i<=7:
-            protocol_CID2+=protocol_Drop_startbit[i]    #挑出CID2
-            if i == 7 and protocol_option == 'CID2':
-                return protocol_CID2
-        elif i==8:
-            protocol_lchksum+=protocol_Drop_startbit[i]  #LCHKSUM
-            if i == 8 and protocol_option == 'LCHKSUM':
-                return protocol_lchksum
-        elif 9<=i<=11:
-            protocol_length+=protocol_Drop_startbit[i]   #挑出length
-            if i == 11 and protocol_option == 'LENGTH':
-                return protocol_length
-        elif len(protocol_Drop_startbit) == 16:
-            protocol_chksum+=protocol_Drop_startbit[i]#如果长度为16，即无info时
-            if protocol_option == 'CHKSUM':
-                return protocol_chksum
-        elif len(protocol_Drop_startbit) > 16:            #长度大于16，抽出info和chksum
-            if 12<=i<=13:
-                protocol_dataflag+=protocol_Drop_startbit[i]
-                if i == 13 and (protocol_option == 'DATAFLAG' or  protocol_option == 'DATA_NUM_for_Sysdata'):
-                    return protocol_dataflag
-            elif 14<=i<=len(protocol_Drop_startbit)-4-1 and (protocol_option == 'DATA_INFO_for_switch' or protocol_option == 'DATA_INFO_for_Sysdata'):
-                protocol_info+=protocol_Drop_startbit[i]
-                if i == len(protocol_Drop_startbit)-4-1:
-                    return protocol_info
-            elif 14<=i<=15 and protocol_option == 'DATA_NUM':           #12和13位为datainfo前两位表示datainfo数据的长度
-                protocol_data_number+=protocol_Drop_startbit[i]    #
-                if i == 15:
-                    return protocol_data_number
-            elif 16<=i<=len(protocol_Drop_startbit)-4-1 and protocol_option == 'DATA_INFO':   #
-                protocol_info+=protocol_Drop_startbit[i]
-                if i == len(protocol_Drop_startbit)-4-1:
-                    return protocol_info
-            elif  len(protocol_Drop_startbit)-4<=i<=len(protocol_Drop_startbit)-1 and protocol_option == 'CHKSUM':
-                protocol_chksum+=protocol_Drop_startbit[i]
-                if i == len(protocol_Drop_startbit)-1:
-                    return protocol_chksum
-        elif protocol_option == 'CID2_DICT':
-            return protocol_CID2_dict
-
+    if protocol_option == 'VER':
+        return protocol_Drop_startbit[:2]
+    elif protocol_option == 'ADR':
+        return protocol_Drop_startbit[2:4]
+    elif protocol_option == 'CID1':
+        return protocol_Drop_startbit[4:6]
+    elif protocol_option == 'CID2':
+        return protocol_Drop_startbit[6:8]
+    elif protocol_option == 'LCHKSUM':
+        return protocol_Drop_startbit[8]
+    elif protocol_option == 'LENGTH':
+        return protocol_Drop_startbit[9:12]
+    elif protocol_option == 'CHKSUM':
+        if len(protocol_Drop_startbit) == 16:
+            return protocol_Drop_startbit[12:]
+        else:
+            return protocol_Drop_startbit[len(protocol_Drop_startbit)-4:len(protocol_Drop_startbit)]
+    elif protocol_option == 'DATAFLAG' or  protocol_option == 'DATA_NUM_for_Sysdata':
+        return protocol_Drop_startbit[12:14]
+    elif protocol_option == 'DATA_INFO_for_switch' or protocol_option == 'DATA_INFO_for_Sysdata':
+        return protocol_Drop_startbit[14:len(protocol_Drop_startbit)-4]
+    elif protocol_option == 'DATA_NUM':
+        return protocol_Drop_startbit[14:16]
+    elif protocol_option == 'DATA_INFO':
+        return protocol_Drop_startbit[16:len(protocol_Drop_startbit)-4]
+    elif protocol_option == 'CID2_DICT':
+        return protocol_CID2_dict
 
 #数据验证函数，验证CID1和lchksum以及chksum是否正确，全部正确返回1，否则返回0
 #command：命令
@@ -444,12 +409,6 @@ def data_verify(command):
     #print("protocol_lchksum减1:",protocol_lchksum-1)
     str_to_bin = bin(((protocol_lchksum-1)))           #10进制转2进制字符串
     protocol_lchksum_final = str_to_bin.split('0b')[1].zfill(4)                  #去掉0b
-    #if len(protocol_lchksum_final)<4:                     #不够4位前面加0
-    #    for i in range(4-len(protocol_lchksum_final)):
-    #        protocol_lchksum_final='0'+protocol_lchksum_final  
-            
-    #print("protocol_lchksum_final：",protocol_lchksum_final)
-    #print('protocol_length2_3_re',protocol_length2_3_re)
     if protocol_lchksum_final == protocol_length2_3_re:    #比较lchksum的值与后三位计算出来的值是否相等
         #print("LCHKSUM校验值正确")
         pass
@@ -488,24 +447,24 @@ def figure_out_available_com(command):
     ser = serial.Serial()
     port_list = list(list_ports.comports())
     com_list = []
-    for i in range(0,len(port_list)):
-        com_list.append(str(port_list[i]).split(' ')[0])
-    while True:                                   #循环判断哪个com口时通的
-            for i in range(0,len(com_list)):
+    for port in port_list:
+        com_list.append(str(port).split(' ')[0])
+    while 1:                                   #循环判断哪个com口时通的
+            for com in com_list:
 
-                ser.port = com_list[i]
+                ser.port = com
                 ser.baudrate =9600
                 try:                              #尝试开串口，监听异常
                     ser.open()                    
                     ser.write(command.encode())        #的写一串发送代码
                     time.sleep(1)                   #睡1秒
                     if ser.inWaiting()>0:           #如果串口有返回数据
-                        return com_list[i]                       #返回com号，结束
+                        return com                      #返回com号，结束
                     elif ser.inWaiting()== 0:       #如果串口无返回数据，继续循环
-                                    print("%s未返回"%com_list[i])   #输出无返回
+                                    print("%s未返回"%com)   #输出无返回
                                     ser.close()
                 except(OSError,serial.SerialException):     #如果触发串口占用异常
-                                    print("%s占用或串口不可用"%com_list[i])
+                                    print("%s占用或串口不可用"%com)
 '''
 -------------------------------------------------------------------------------
 UI类函数定义
@@ -614,8 +573,8 @@ class Setting_window():
         self.sql_rec_setting_namelist = []
         self.sql_inv_setting_namelist = []
         self.sql_bat_setting_namelist = []
-        
-        for i in range(int(object_cfg_tool.Pick_Option_In_Section(name_num,0,0))):
+        self.num = int(object_cfg_tool.Pick_Option_In_Section(name_num,0,0))
+        for i in range(self.num):
             
             #参数名称加载
             self.Sysdata_name = object_cfg_tool.Pick_Option_In_Section(name_list,i,1)
@@ -653,7 +612,7 @@ class Setting_window():
         self.receive_protocol_str = receive_protocol_str
         if self.receive_protocol_str == '':
             self.setting_win.title(getting_value_title)
-            for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+            for i in range(self.num):
                #stringvar赋值
                self.dict['%s%s'%('variable',str(i))].set('\\')
                #值写入临时数组
@@ -715,7 +674,7 @@ class Setting_the_password():
         self.receive_password = ''.join(list(map(lambda x:hex(ord(x)).lstrip('0x'),list(self.password.get()))))   
         share_variable.receive_password = self.receive_password
         share_variable.polling_status = '1'
-        tk.messagebox.showinfo('密码接收成功','请等待,密码发送中')
+        #tk.messagebox.showinfo('密码接收成功','请等待,密码发送中')
         self.destory_win()
 '''
 开关量类
@@ -725,6 +684,7 @@ class Switching_Value_Window():
         share_variable.switching_window_name = 'switch'
         self.switch_win = tk.Toplevel()
         self.name_num = name_num
+        self.num = int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))
         self.name_list = name_list
         self.switch_win.title('开关量状态-正在获取数据')
         self.common_label_win = Common_label_for_setting(self.switch_win)
@@ -733,8 +693,9 @@ class Switching_Value_Window():
         self.switch_win.protocol('WM_DELETE_WINDOW',self.close_win)
         self.dict = {}
         self.sql_switching_namelist = []
+        
         '''循环读取cfg中开关量名称并加载到后台，同时写入数据库'''
-        for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+        for i in range(self.num):
             #开关量名称加载
             self.Switching_Value_name = object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1)
             self.common_label_win.common_label(self.Switching_Value_name,i+1,0,20,'groove')
@@ -750,15 +711,15 @@ class Switching_Value_Window():
         self.sql_switching_valuelist = []
         if share_variable.receive_switch_data_str == '':
             self.switch_win.title('开关量状态-正在获取数据')
-            for i in range(int(object_cfg_tool.Pick_Option_In_Section(self.name_num,0,0))):
+            for i in range(self.num):
                self.dict['%s%s'%('variable',str(i))].set('\\')
                self.sql_switching_valuelist.append(['\\',object_cfg_tool.Pick_Option_In_Section(self.name_list,i,1)])
         else:
             self.switch_win.title('开关量状态-已获取数据')
             self.switching_value_return_list = protocol_switch.analysis_protocol(share_variable.receive_switch_data_str)
-            for i in range(len(self.switching_value_return_list)):
-               self.dict['%s%s'%('variable',str(i))].set(self.switching_value_return_list[i])
-               self.sql_switching_valuelist.append([self.switching_value_return_list[i],i])
+            for switching_value in self.switching_value_return_list:
+               self.dict['%s%s'%('variable',str(self.switching_value_return_list.index(switching_value)))].set(switching_value)
+               self.sql_switching_valuelist.append([switching_value,self.switching_value_return_list.index(switching_value)])
         sql.config_switching_value(self.sql_switching_valuelist)
     def close_win(self):
         share_variable.switching_window_name = ''
@@ -776,8 +737,8 @@ class Warning_Value_Window():
                     '告警量part3名称','告警量part3状态','告警量part4名称','告警量part4状态',]
         self.dict = {}  #用于动态变量批量处理(批量赋值Stringvar)
         self.sql_warning_namelist = []
-        for i in range(len(self.list_for_menu)):
-            self.common_label_win_top.common_label(self.list_for_menu[i],0,i,20,'raised')
+        for list_part in self.list_for_menu:
+            self.common_label_win_top.common_label(list_part,0,self.list_for_menu.index(list_part),20,'raised')
         
         self.warning_value_name_sections = ['Warning_Value_list_part1','Warning_Value_list_part2',
                                   'Warning_Value_list_part3','Warning_Value_list_part4'] 
@@ -834,7 +795,8 @@ class main_menu():
         self.commandlist = commandlist
         self.weight_name = tk.Menu(self.menu_main_button,tearoff = 0)
         self.menu_main_button.add_cascade(label = self.label_name,menu = self.weight_name)
-        for i in range(len(self.menulist)):
+        self.length = len(self.menulist)
+        for i in range(self.length):
             self.weight_name.add_command(label = self.menulist[i],command = self.commandlist[i])
          
 
@@ -1105,8 +1067,8 @@ def calc_float(data):
 #data_str_exclude_chksum：不包括~以及chksum的中间部分
 def get_chksum(data_str_exclude_chksum):
     sum_chksum = 0   #存储所有字符的十进制和（除去CHKSUM）
-    for i in range(0,len(data_str_exclude_chksum)):
-        sum_chksum+=int(ord(data_str_exclude_chksum[i]))
+    for chksum_i in data_str_exclude_chksum:
+        sum_chksum+=int(ord(chksum_i))
     sum_chksum_bin = data_reverse(sum_chksum%65535,16)     #默认长度为16位
     sum_chksum_bin = int(sum_chksum_bin,2)
     return hex(sum_chksum_bin+1).lstrip('0x').upper()       #取反+1转16进制去掉'0x'换算成大写，返回校验和
@@ -1190,17 +1152,26 @@ class send_message():
         '''组成完整命令并发送'''
     def assemble_commmand_and_send(self):
         '''判断setting_command表状态'''
-        if sql.get_setting_status() != '':
-            share_variable.polling_status = '1'
-            self.setting_command = sql.get_setting_status()
-            if self.setting_command[0] == 'volt':
+        self.setting_command = sql.get_setting_status()
+        if self.setting_command != '':            
+            if self.setting_command[0][0] == 'password':
+                self.receive_password = ''.join(list(map(lambda x:hex(ord(x)).lstrip('0x'),list(self.setting_command[0][1]))))   
+                share_variable.receive_password = self.receive_password
+                share_variable.polling_status = '1'
+                sql.update_setting_status(['password',0])
+                
+            elif self.setting_command[0] == 'volt':
                 share_variable.res = float_2_hex_2_com(int(self.setting_command[1]))
                 share_variable.Sysdata_0 = 'A1'
                 sql.update_setting_status(['volt',0])
+                share_variable.polling_status = '1'
             elif self.setting_command[0] == 'freq':
                 share_variable.res = float_2_hex_2_com(int(self.setting_command[1]))
                 share_variable.Sysdata_0 = 'A2'
                 sql.update_setting_status(['freq',0])
+                share_variable.polling_status = '1'
+            else:
+                pass
         else:
             pass
         self.res = share_variable.res
@@ -1496,7 +1467,7 @@ class send_message():
                      return
                  
                  elif share_variable.Device_CID2 == '80' and share_variable.polling_status == '2' :
-                     print('CID2=80时的response_data_str',share_variable.response_data_str)
+                     #print('CID2=80时的response_data_str',share_variable.response_data_str)
                      share_variable.receive_sysdata_str = share_variable.response_data_str
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                      share_variable.polling_status = '0'
@@ -1525,33 +1496,33 @@ class send_message():
                  elif share_variable.Device_CID2 == '97': 
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                      self.clear_the_value('1') #系统设置清零
-                     tk.messagebox.showinfo(title = '设置状态',message = '系统设置成功')
+                     #tk.messagebox.showinfo(title = '设置状态',message = '系统设置成功')
                      share_variable.polling_status = '2'
                      share_variable.setting_window_name = 'sys'
                  elif share_variable.Device_CID2 == '98':
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                      self.clear_the_value('2') #整流清零
-                     tk.messagebox.showinfo(title = '设置状态',message = '整流设置成功')
+                     #tk.messagebox.showinfo(title = '设置状态',message = '整流设置成功')
                      share_variable.polling_status = '2'
                      share_variable.setting_window_name = 'rec'
                      share_variable.Device_CID2 = '' 
                  elif share_variable.Device_CID2 == '99':
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                      self.clear_the_value('3') #整流清零
-                     tk.messagebox.showinfo(title = '设置状态',message = '逆变设置成功')
+                     #tk.messagebox.showinfo(title = '设置状态',message = '逆变设置成功')
                      share_variable.polling_status = '2'
                      share_variable.setting_window_name = 'inv'
                  elif share_variable.Device_CID2 == '9A':
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                      self.clear_the_value('4') #整流清零
-                     tk.messagebox.showinfo(title = '设置状态',message = '电池设置成功')
+                     #tk.messagebox.showinfo(title = '设置状态',message = '电池设置成功')
                      share_variable.polling_status = '2'
                      share_variable.setting_window_name = 'bat'
                  #密码接收
                  elif share_variable.Device_CID2 == '84':
                      print('share_variable.Device_RTN',share_variable.Device_RTN)
                      if share_variable.Device_RTN == '00':
-                         tk.messagebox.showinfo("密码","密码输入成功，可以进行设置操作")
+                         #tk.messagebox.showinfo("密码","密码输入成功，可以进行设置操作")
                          self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                          share_variable.polling_status = '0'
                          share_variable.receive_password = ''
@@ -1589,6 +1560,11 @@ class send_message():
                         self.protocol_list[14],self.protocol_list[6],self.protocol_list[13],
                         self.protocol_list[35]
                                                 ]
+                     common_label_dict_for_ups_serial_num = [
+                        self.protocol_list[32],self.protocol_list[33],
+                        self.protocol_list[34],self.protocol_list[35],
+                                                            ]
+                     print('common_label_dict_for_ups_serial_num',common_label_dict_for_ups_serial_num)
                      self.queue.put(common_label_dict_for_90)
                      self.logging.print_the_logging(share_variable.Device_CID2,'receive:',share_variable.response_data_str)
                  elif share_variable.Device_CID2 == '81':

@@ -28,10 +28,10 @@ def analysis_protocol(protocol_str):
         protocol_info_list = []
         for i in range(0,len(protocol_info),8):
             protocol_info_list.append(protocol_info[i:i+8])
-        #print(protocol_info_list)
+        print("原始:",protocol_info_list)
         protocol_dataf_list = []
-        for i in range(0,len(protocol_info_list)):
-            protocol_dataf_list.append(func.calc_float((protocol_info_list[i])))
+        for protocol_info_i in protocol_info_list:
+            protocol_dataf_list.append(func.calc_float((protocol_info_i)))
             #print("第%d个数为："%(i+1),func.calc_float((protocol_info_list[i])))
     else:
         print("DATAINFO长度为None")

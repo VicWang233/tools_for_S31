@@ -53,14 +53,9 @@ def analysis_protocol(protocol_str):
         word1 = protocol_info[:4]
         #print('word1',word1)
         word2 = protocol_info[4:]
-        word1_to_bin  = bin(int(word1,16)).lstrip('0b')    #2进制word1
-        word2_to_bin  = bin(int(word2,16)).lstrip('0b')    #2进制word2
-        if len(word1_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word1_to_bin)):
-                word1_to_bin='0'+word1_to_bin
-        if len(word2_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word2_to_bin)):
-                word2_to_bin='0'+word2_to_bin
+        word1_to_bin  = bin(int(word1,16)).lstrip('0b').zfill(16)    #2进制word1
+        word2_to_bin  = bin(int(word2,16)).lstrip('0b').zfill(16)     #2进制word2
+
         #word1_to_bin = word1_to_bin[::-1]            #搞反了，反转
         #word2_to_bin = word2_to_bin[::-1]  
         #print('word1_to_bin',word1_to_bin)

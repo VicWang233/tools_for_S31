@@ -114,27 +114,11 @@ def analysis_protocol(protocol_str):
         word3 = protocol_info[8:12]
         word4 = protocol_info[12:16]
         word5 = protocol_info[16:]
-        word1_to_bin  = bin(int(word1,16)).lstrip('0b')    #2进制word1
-        word2_to_bin  = bin(int(word2,16)).lstrip('0b')    #2进制word2
-        word3_to_bin  = bin(int(word3,16)).lstrip('0b')
-        word4_to_bin  = bin(int(word4,16)).lstrip('0b')
-        word5_to_bin  = bin(int(word5,16)).lstrip('0b')
-        #print('word3_to_bin',word3_to_bin)
-        if len(word1_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word1_to_bin)):
-                word1_to_bin='0'+word1_to_bin
-        if len(word2_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word2_to_bin)):
-                word2_to_bin='0'+word2_to_bin
-        if len(word3_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word3_to_bin)):
-                word3_to_bin='0'+word3_to_bin
-        if len(word4_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word4_to_bin)):
-                word4_to_bin='0'+word4_to_bin
-        if len(word5_to_bin)<16:                     #不够16位前面加0
-            for i in range(16-len(word5_to_bin)):
-                word5_to_bin='0'+word5_to_bin
+        word1_to_bin  = bin(int(word1,16)).lstrip('0b').zfill(16)    #2进制word1
+        word2_to_bin  = bin(int(word2,16)).lstrip('0b').zfill(16)    #2进制word2
+        word3_to_bin  = bin(int(word3,16)).lstrip('0b').zfill(16)
+        word4_to_bin  = bin(int(word4,16)).lstrip('0b').zfill(16)
+        word5_to_bin  = bin(int(word5,16)).lstrip('0b').zfill(16)
 
         #print('word3_to_bin转后',word3_to_bin)
         word1_list = []
