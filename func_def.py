@@ -54,7 +54,10 @@ sql = sql_config.set_data_2_sql()
 
 
 '''
-窗口毁灭函数，后面有两次触发，一次点击x，一次点击第一列下拉菜单的退出按钮
+函数名称：destory
+功能描述：点击后关闭窗口，并且清除对应窗口后台运行的其他线程
+参数意义：parent：表示要毁灭的窗口对象。
+函数调用：sql.clear_all_value():详见sql_config.py
 '''
 def destory(parent):
     sql.clear_all_value()
@@ -66,26 +69,40 @@ def destory(parent):
 -------------------------------------------------------------------------------
 '''
 ###########指定section和option的序号调出参数名###########
-#section_you_choose=你选择的section，option_i_you_choose=你选择的section下的列表序号。
-#返回选定option的参数值
-#用于处理CFG文件的类
+'''
+类名称：cfg_tool
+功能描述:从cfg文件中调取需要的内容
+参数意义：ConfigParser：处理cfg、ini、conf等文件的包
+'''
 class cfg_tool(ConfigParser):           #继承父类
+    '''
+    函数名称：__init__(self,filename)
+    功能描述：初始化cfg文件类函数，即执行下面类的其他函数时会默认先执行此函数。
+    参数意义：self：表示类本身(后面将不在解释self)。filename:表示要读取的文件名
+    函数调用：read:读文件。sections：选取cfg中所有的section(形如[analog_num])，返回一个列表
+    '''
     def __init__(self,filename):                 #初始化，定义需要搞的cfg文件名，
         self.filename = filename
         self.conf = ConfigParser(allow_no_value=True,strict = False)    #定义加载cfg文件的对象
         self.conf.read(self.filename)                          #读cfg文件
         self.sections = self.conf.sections()
-      
+    '''
+    函数名称：Pick_Section_number(self,section_num_you_choose)
+    功能描述：从sections列表中寻找指定的section
+    参数意义：section_num_you_choose:指定的section
+    函数调用：无
+    '''  
     def Pick_Section_number(self,section_num_you_choose):
         for section in self.sections:                          #循环找出对应的section
             if section == section_num_you_choose:
                 return int(self.conf.options(section)[0])
         
     '''
-    section_you_choose:你选择的section，格式为字符串
-    option_i_you_choose:你选择的option行，格式为int
-    
-    '''
+    函数名称：Pick_Option_In_Section(self,section_you_choose,option_row_you_choose,option_list_i,*args)
+    功能描述：选出cfg某section中的某行的某个元素
+    参数意义：section_you_choose:所选section，格式为字符串。option_row_you_choose：所选行。option_list_i：所选列。*args:可选参数，预留。
+    函数调用：items：返回section_you_choose下所有option。isinstance：判断是否为同一类型的变量
+    '''  
     def Pick_Option_In_Section(self,section_you_choose,option_row_you_choose,option_list_i,*args):
                 options = self.conf.items(section_you_choose)
                 option = list(options[option_row_you_choose])[0].split('\t')[option_list_i]
@@ -97,11 +114,23 @@ class cfg_tool(ConfigParser):           #继承父类
                         print(option)
                     else:
                         return option
-
+    
+    '''
+    函数名称：Pick_Option(self,section_you_choose,option_row_you_choose)
+    功能描述：选出所选的行
+    参数意义：section_you_choose:所选section，格式为字符串。option_row_you_choose：所选行。
+    函数调用：无
+    ''' 
     def Pick_Option(self,section_you_choose,option_row_you_choose):
         options = self.conf.items(section_you_choose)
         return list(options[option_row_you_choose])[0].split('\t')
 #######一下函数暂时用不到#######
+    '''
+    函数名称：Change_Value_In_CFG(self,section_you_choose,option_you_choose,new_option_value)
+    功能描述：改变cfg中某个元素的值
+    参数意义：section_you_choose:所选section，格式为字符串。option_row_you_choose：所选行。new_option_value：新值
+    函数调用：无
+    '''     
     def Change_Value_In_CFG(self,section_you_choose,option_you_choose,new_option_value):
         self.openfile = open(self.filename,'w')
         self.conf.set(section_you_choose,option_you_choose,new_option_value)
@@ -110,14 +139,21 @@ class cfg_tool(ConfigParser):           #继承父类
         print("%s的值%s改为%s"%(section_you_choose,option_you_choose,new_option_value))
         #return self.conf.get(section_you_choose,option_row_you_choose)
         #####专门获取系统[Config_for_Sysdata]中的传入值,再把Config_for_Sysdata中的值清空####
-    def get_value_IN_CFG(self,section_you_choose,option_you_choose):
-        self.conf.read(self.filename) 
-        self.return_value = self.conf.get(section_you_choose,option_you_choose)
-        #self.Change_Value_In_CFG(section_you_choose,option_you_choose,'1')
-        return self.return_value
     
-    '''logging模块输出日志类'''                    
+  
+'''
+类名称：logging_file()
+功能描述:logging模块输出日志类，输出log文件日志
+参数意义：无
+函数调用：无
+'''              
 class logging_file():
+    '''
+    函数名称：__init__(self)
+    功能描述：初始化logging
+    参数意义：无
+    函数调用：basicConfig：log输出文件基本配置
+    '''  
     def __init__(self):
         logging.basicConfig(
             level = logging.INFO,
@@ -125,6 +161,12 @@ class logging_file():
             filename = 'toolss.log',
             filemode = 'w'
                             )
+    '''
+    函数名称：print_the_logging(self,CID2,status_for_IO,message)
+    功能描述：输出log到log日志文件
+    参数意义：CID2：CID2。status_for_IO:判断是读命令还是写命令,message：命令字符串
+    函数调用：info：输出字符串到log
+    '''  
     def print_the_logging(self,CID2,status_for_IO,message):
         self.message = message
         self.status_for_IO = status_for_IO
@@ -132,8 +174,19 @@ class logging_file():
         #logging.info('CID2:'+self.CID2+','+self.status_for_IO+':'+self.message)
         logging.info('%s%s%s%s%s%s'%('CID2:',self.CID2,',',self.status_for_IO,':',self.message))
         
-    '''输出csv类''' 
+'''
+类名称：output_csv()
+功能描述:输出列表至csv文件
+参数意义：无
+函数调用：无
+''' 
 class output_csv():
+    '''
+    函数名称：__init__(self)
+    功能描述：初始化csv类
+    参数意义：无
+    函数调用：writer：确定csv文件名，以及根据','来判断分割点。writerow:把一个列表写入csv的行，每个元素占一行
+    '''  
     def __init__(self):
         if share_variable.polling_status == '3':
             self.cfg_tool_for_history = cfg_tool('ToolsDebugChs.cfg')
@@ -148,23 +201,40 @@ class output_csv():
                 self.filewriter = csv.writer(csv_out_file,delimiter = ',')
                 self.index = ['记录编号','记录意义','第一点(最新点)','第二点','第三点','第四点']
                 self.filewriter.writerow(self.index)
+    '''
+    函数名称：Output_csv_for_analog_quantity(self)
+    功能描述：输出模拟量数据到csv文件
+    参数意义：无
+    函数调用：无
+    '''
     def Output_csv_for_analog_quantity(self):
         with open('模拟量数据保存.csv','w',newline = '') as csv_out_file: 
             self.filewriter = csv.writer(csv_out_file,delimiter = ',')
             self.filewriter.writerow(self.receive_data)
-            '''
-            此处根据情况加代码
-            '''
+
+    '''
+    函数名称：Output_csv_for_history_event(self,receive_data)
+    功能描述：输出历史记录数据到csv文件
+    参数意义：receive_data：接收到的数据
+    函数调用：protocol_analyse：详见protocol_config_for_history_event.py
+    '''
     def Output_csv_for_history_event(self,receive_data):
         self.receive_data = receive_data
         self.data = protocol_history.protocol_analyse(self.receive_data,self.cfg_tool_for_history)
         with open(self.filename,'a',newline = '') as csv_out_file:
             self.filewriter = csv.writer(csv_out_file,delimiter = ',')
             self.filewriter.writerow(self.data)   #加载列 deque形式为([1,2,3,4,5,6],[6,5,4,3,2,1],etc..)
-                    
+    '''
+    函数名称：Output_csv_for_fault_event(self,status,receive_data_time,receive_data_name,receive_data_value_1,receive_data_value_2,receive_data_value_3,receive_data_value_4)
+    功能描述：输出故障点数据到csv文件
+    参数意义：详细见下面。
+    函数调用：calc_receive_fault_data_in_xxx,calc_receive_fault_data_in_bits
+    '''                    
     def Output_csv_for_fault_event(self,status,receive_data_time,receive_data_name,receive_data_value_1,receive_data_value_2,receive_data_value_3,receive_data_value_4):
         '''
-        status = 1 表示整流   status = 2 表示逆变 receive_data_time 表示解析出的时间
+        status = 1 表示整流   
+        status = 2 表示逆变 
+        receive_data_time 表示解析出的时间
         receive_data_value_1~4 表示四个点的数据
         num代表数据量，整流239，逆变149
         row0_Rec代表cfg第一列
@@ -227,9 +297,9 @@ class output_csv():
                             data_2 = self.calc_receive_fault_data_in_bits(i,self.receive_data_value_2[int(row0_Inv[i])-1],'Inv','bits')
                             data_3 = self.calc_receive_fault_data_in_bits(i,self.receive_data_value_3[int(row0_Inv[i])-1],'Inv','bits')
                             data_4 = self.calc_receive_fault_data_in_bits(i,self.receive_data_value_4[int(row0_Inv[i])-1],'Inv','bits')
-                            if i == 20:
-                                print('20:data_1',data_1)
-                                print('20:int(row0_Inv[i])-1',int(row0_Inv[i])-1)
+                            #if i == 20:
+                            #    print('20:data_1',data_1)
+                            #    print('20:int(row0_Inv[i])-1',int(row0_Inv[i])-1)
                         else:
                             '''逆变-单位判断'''
                             data_1 = self.calc_receive_fault_data_in_bits(i,self.receive_data_value_1[int(row0_Inv[i])-1],'Inv','bit')
@@ -239,7 +309,13 @@ class output_csv():
                         self.write_row_list = [i,self.receive_data_name[i],data_1,data_2,data_3,data_4]
                     self.filewriter.writerow(self.write_row_list)
             self.filewriter.writerow([self.receive_data_time])
-    
+
+    '''
+    函数名称：calc_receive_fault_data_in_xxx(self,row,value,rec_or_inv)
+    功能描述：故障点数据算法函数(xxx的情况)
+    参数意义：row：行。value：值。rec_or_inv：整流or逆变
+    函数调用：round：百度
+    '''       
     def calc_receive_fault_data_in_xxx(self,row,value,rec_or_inv):
         '''
         根据cfg第6个字符串来判断需要对数据进行哪些操作，
@@ -275,6 +351,13 @@ class output_csv():
                 return ''
             else:
                 return '?'
+
+    '''
+    函数名称：calc_receive_fault_data_in_bits(self,row,value,rec_or_inv,bit_or_bits)
+    功能描述：故障点数据算法函数(bit or bits的情况)
+    参数意义：row：行。value：值。rec_or_inv：整流or逆变
+    函数调用：zfill：百度
+    ''' 
     def calc_receive_fault_data_in_bits(self,row,value,rec_or_inv,bit_or_bits):
         '''
         bit代表cfg第四个数split('-')拆分成数组,第一个元素为低位，第二个为高位
@@ -287,12 +370,12 @@ class output_csv():
         receive_data_value_bin = bin(int(self.bitvalue,16)).lstrip('0b').zfill(16)[::-1]
         if self.bit_or_bits == 'bits' and rec_or_inv == 'Rec':
             bit = share_variable.fault_row3_list_for_rec[row].split('-')
-            if row == 20:
-                print('20:bits',bit)
-                print('20:self.bitvalue',self.bitvalue)
-                print('20:receive_data_value_bin',receive_data_value_bin)
-                print('20:int(receive_data_value_bin[int(bit[0]):int(bit[1])+1])',int(receive_data_value_bin[int(bit[0]):int(bit[1])+1]))
-                print('20:int(share_variable.fault_row4_list_for_rec[row])',int(share_variable.fault_row4_list_for_rec[row]))
+            #if row == 20:
+           #    print('20:bits',bit)
+            #    print('20:self.bitvalue',self.bitvalue)
+            #    print('20:receive_data_value_bin',receive_data_value_bin)
+           #     print('20:int(receive_data_value_bin[int(bit[0]):int(bit[1])+1])',int(receive_data_value_bin[int(bit[0]):int(bit[1])+1]))
+           #     print('20:int(share_variable.fault_row4_list_for_rec[row])',int(share_variable.fault_row4_list_for_rec[row]))
             if int(receive_data_value_bin[int(bit[0]):int(bit[1])+1]) == int(share_variable.fault_row4_list_for_rec[row][::-1]):
                 return 'Y'
             else:
@@ -327,6 +410,13 @@ class output_csv():
 #protocol_str:可选字符串
 #protocol_option可选参数：VER版本，ADR设备，CID1，CID2，DATA_NUM数据个数。
 #函数功能，拆分协议响应，返回所选option的值
+
+'''
+函数名称：data_split(protocol_str,protocol_option)
+功能描述：分割接收到的协议字符串
+参数意义：protocol_str：协议字符串。protocol_option：所要挑出的部分。
+函数调用：zfill：百度
+''' 
 def data_split(protocol_str,protocol_option):
     protocol = ''
     protocol = protocol_str
@@ -381,6 +471,12 @@ def data_split(protocol_str,protocol_option):
 
 #数据验证函数，验证CID1和lchksum以及chksum是否正确，全部正确返回1，否则返回0
 #command：命令
+'''
+函数名称：data_split(protocol_str,protocol_option)
+功能描述：数据验证函数，验证CID1、lchksum、chksum是否正确
+参数意义：command：命令字符串
+函数调用：str_to_int_ten、get_chksum、data_reverse
+''' 
 def data_verify(command):
     protocol_Drop_startbit = command.split("~")[1]
     protocol_CID1 = data_split(command,'CID1')   #CID1
@@ -423,18 +519,18 @@ def data_verify(command):
         return 0
     ############chksum验证###############
     get_chksum_1 = get_chksum(protocol_Drop_startbit[0:len(protocol_Drop_startbit)-4])
-    #print("get_chksum",get_chksum_1)
-    #print("protocol_chksum",protocol_chksum)
-    #最终判断计算值与协议校验值-1是否相等
-    if get_chksum_1 == protocol_chksum:
-        #print("CHKSUM校验码正确")
-        pass
-    else:
-        print("CHKSUM校验码错误")
+    if get_chksum_1 != protocol_chksum:
+        #print("CHKSUM校验码错误")
         return 0
 
     return 1   
 
+'''
+函数名称：assemble_command(Device_VER,Device_ADR,body)
+功能描述：命令组装函数，拼接命令各个部分，并根据前面的部分计算chksum组成完整命令
+参数意义：Device_VER：设备版本号。Device_ADR：设备号。body：命令中间部分
+函数调用：get_chksum
+''' 
 def assemble_command(Device_VER,Device_ADR,body):
             chksum = get_chksum(Device_VER+Device_ADR+body)
             massage = '%s%s%s%s%s%s'%('~',Device_VER,Device_ADR,body,chksum,'\r')
@@ -443,6 +539,12 @@ def assemble_command(Device_VER,Device_ADR,body):
             
 #################轮询COM口函数#########################
 #返回设备com号，通过发送指令来判断COM口是否有响应。
+'''
+函数名称：figure_out_available_com(command)
+功能描述：查询可用串口函数
+参数意义：command：尝试向串口发送的命令
+函数调用：Serial():串口对象、list_ports.comports()：列出串口号列表。
+'''
 def figure_out_available_com(command):
     ser = serial.Serial()
     port_list = list(list_ports.comports())
@@ -479,40 +581,73 @@ fault_cfg_tool = cfg_tool('EventChs.cfg')
 
 #dialogname表示修改值弹窗的名称，i表示cfg文件当中的行。
 
-            
 '''
-通用标签类。
-common_label为普通标签类方法
-common_label_for_modify为带对话框属性的标签类方法，用于设置量。
-'''       
+类名称：Common_label_for_setting(object)
+功能描述：通用标签设置类
+参数意义：object：继承boject类
+函数调用：无
+'''            
+      
 class Common_label_for_setting(object):  #不可继承tk类，会出现多个空弹窗。
+    '''
+    通用标签类。
+    common_label为普通标签类方法
+    common_label_for_modify为带对话框属性的标签类方法，用于设置量。
+    ''' 
+    '''
+    函数名称：__init__(self,window)
+    功能描述：类初始化
+    参数意义：window：所在框架
+    函数调用： tkFont.Font：字体格式设置
+    '''     
     def __init__(self,window):
         super().__init__()
         self.window = window
         self.ft = tkFont.Font(size = 10)
         #object_cfg_tool.Change_Value_In_CFG('Config_for_Sysdata','SYSData_List','temporary_variable',self.res,object_cfg_tool.Pick_Option_In_Section('SYSData_List',self.i,0))
         '''动态标签'''
+    '''
+    函数名称：common_label_strvar(self,text_1,row_1,column_1,width_1,relief_1)
+    功能描述：动态显示标签设定函数
+    参数意义：text_1：标签要显示的内容。row_1：行。column_1：列。width_1：宽度。relief_1：风格。
+    函数调用： tkFont.Font：字体格式设置、grid：用于部署
+    ''' 
     def common_label_strvar(self,text_1,row_1,column_1,width_1,relief_1):
         label = tk.Label(self.window,textvariable=text_1,relief = relief_1,width = width_1,height=1,anchor = 'w',bg = 'white',font = self.ft)
         label.grid(row=row_1,column=column_1,sticky = 'W'+'N')
         '''静态标签'''
+    '''
+    函数名称：common_label(self,text_1,row_1,column_1,width_1,relief_1)
+    功能描述：静态显示标签设定函数
+    参数意义：text_1：标签要显示的内容。row_1：行。column_1：列。width_1：宽度。relief_1：风格。
+    函数调用： tkFont.Font：字体格式设置、grid：用于部署
+    ''' 
     def common_label(self,text_1,row_1,column_1,width_1,relief_1):
         label = tk.Label(self.window,text=text_1,relief = relief_1,width = width_1,height=1,anchor = 'w',bg = 'white',font = self.ft)
         label.grid(row=row_1,column=column_1,sticky = 'W'+'N')
 
         #双击可设定值的label
+    '''
+    函数名称：common_label_for_modify(self,text_1,row_1,column_1,width_1,relief_1,dialogname,i,cfg_section)
+    功能描述：点击可弹窗修改值的动态显示标签设定函数
+    参数意义：text_1：标签要显示的内容。row_1：行。column_1：列。width_1：宽度。relief_1：风格。dialogname：修改值的名称。i：cfg中的第i行。cfg_section：所选的cfg的section
+    函数调用： tkFont.Font：字体格式设置、grid：用于部署
+    ''' 
     def common_label_for_modify(self,text_1,row_1,column_1,width_1,relief_1,dialogname,i,cfg_section):
         def print_float(self):
             self.res = simpledialog.askfloat(dialogname,"修改值")
-            
+            '''根据cfg中第三个数字作为标志位来进行判断输入的值是否符合要求
+               如果第三个数字为0，则判断输入值是否在列表中存在。（列表从cfg同行第4个元素中取）
+               如果第三个数字为1，则判断输入值是否在范围内。（范围在cfg同行第4个元素中取）
+            '''
             #######判断输入值是否符合要求########
             #########object_cfg_tool.Pick_Option_In_Section('SYSData_List',i,2) == 0
             #########此类情况是在特定值有效时可用#################
-            print('Pick_Option_In_Section(cfg_section,i,2)',object_cfg_tool.Pick_Option_In_Section(cfg_section,i,2))
+            #print('Pick_Option_In_Section(cfg_section,i,2)',object_cfg_tool.Pick_Option_In_Section(cfg_section,i,2))
             if object_cfg_tool.Pick_Option_In_Section(cfg_section,i,2) == '0':
                 #把option[3]转换为列表，再把每个元素转换成float类型
                 list_for_standard_value = list(map(lambda x:float(x),object_cfg_tool.Pick_Option_In_Section(cfg_section,i,3).split('、')))
-                print('list_for_standard_value',list_for_standard_value)
+                #print('list_for_standard_value',list_for_standard_value)
                 #判断输入值与有效的值是否有交集，即判断输入值是否在
                 if self.res in set(list_for_standard_value):
                     pass
@@ -553,10 +688,20 @@ class Common_label_for_setting(object):  #不可继承tk类，会出现多个空
         name.grid(row=row_1,column=column_1,sticky = 'W'+'N')        
         #输入的设定值的合理性判断函数。
     #def entry_verify(self):
+
 '''
-通用设置类
+类名称：Setting_window()
+功能描述：通用设置量窗口设置类
+参数意义：无
+函数调用：无
 ''' 
 class Setting_window():
+    '''
+    函数名称：__init__(self,name_num,name_list,name_for_setting)
+    功能描述：设置窗口初始化
+    参数意义：name_num：cfg中对应的section下的数量值。name_list：对应的section的名称。name_for_setting：设置的状态
+    函数调用：Common_label_for_setting、common_label、Pick_Option_In_Section
+    '''     
     def __init__(self,name_num,name_list,name_for_setting):
         share_variable.setting_window_name = name_for_setting
         share_variable.polling_status = '2'
@@ -603,7 +748,12 @@ class Setting_window():
             sql.config_inv_setting_init(self.sql_inv_setting_namelist)
         elif share_variable.setting_window_name == 'bat':
             sql.config_bat_setting_init(self.sql_bat_setting_namelist)
-                
+    '''
+    函数名称：reflash_data(self,getting_value_title,got_value_title,receive_protocol_str)
+    功能描述：设置量数值刷新函数，配合多线程
+    参数意义：getting_value_title：设置量窗口状态（获取数据中）。got_value_title：（已获取数据）。receive_protocol_str：获取的协议字符串
+    函数调用：protocol_sysdata.analysis_protocol
+    '''                 
     def reflash_data(self,getting_value_title,got_value_title,receive_protocol_str):
         self.sql_sys_setting_valuelist = []
         self.sql_rec_setting_valuelist = []
@@ -648,12 +798,20 @@ class Setting_window():
             sql.config_inv_setting(self.sql_inv_setting_valuelist)
         elif share_variable.setting_window_name == 'bat':
             sql.config_bat_setting(self.sql_bat_setting_valuelist)
-
-
+        
 '''
-密码Toplevel类
-'''         
+类名称：Setting_the_password()
+功能描述：负责密码的窗口搭建以及密码接收发送。
+参数意义：无
+函数调用：无
+'''  
 class Setting_the_password():
+    '''
+    函数名称： __init__(self)
+    功能描述：密码窗口初始化
+    参数意义：无
+    函数调用：tk.Toplevel()：弹窗。tk.Button：按钮
+    '''  
     def __init__(self):
         self.win_for_password = tk.Toplevel()
         self.win_for_password.title("输入密码(位数写死为6位,不是六位会导致chksum验证出错。)")
@@ -667,19 +825,40 @@ class Setting_the_password():
         self.button_cancel = tk.Button(self.win_for_password,text = '取消',command = self.destory_win)
         self.button_cancel.grid(row = 1,column = 1)
         
+    '''
+    函数名称：destory_win(self)
+    功能描述：关闭窗口触发函数
+    参数意义：无
+    函数调用：无
+    ''' 
     def destory_win(self):
         self.win_for_password.destroy()
-        
+    '''
+    函数名称：password_modify(self)
+    功能描述：将用户输入的密码传值给share_vairable临时数据库等待调用。并改变轮询status
+    参数意义：无
+    函数调用：无
+    '''         
     def password_modify(self):
         self.receive_password = ''.join(list(map(lambda x:hex(ord(x)).lstrip('0x'),list(self.password.get()))))   
         share_variable.receive_password = self.receive_password
         share_variable.polling_status = '1'
         #tk.messagebox.showinfo('密码接收成功','请等待,密码发送中')
         self.destory_win()
+
 '''
-开关量类
-'''
+类名称：Switching_Value_Window()
+功能描述：开关量窗口类
+参数意义：无
+函数调用：无
+''' 
 class Switching_Value_Window():
+    '''
+    函数名称：__init__(self,name_num,name_list)
+    功能描述：开关量窗口初始化
+    参数意义：name_num：cfg中对应的section下的数量值。name_list：对应的section的名称。
+    函数调用：Common_label_for_setting、common_label、switch_win.protocol：窗口关闭时触发函数、sql.config_switching_value_init()
+    '''     
     def __init__(self,name_num,name_list):
         share_variable.switching_window_name = 'switch'
         self.switch_win = tk.Toplevel()
@@ -690,7 +869,7 @@ class Switching_Value_Window():
         self.common_label_win = Common_label_for_setting(self.switch_win)
         self.common_label_win.common_label('开关量名称',0,0,20,'raised')
         self.common_label_win.common_label('开关量状态',0,1,20,'raised')
-        self.switch_win.protocol('WM_DELETE_WINDOW',self.close_win)
+        self.switch_win.protocol('WM_DELETE_WINDOW',self.close_win)   #关闭窗口时触发
         self.dict = {}
         self.sql_switching_namelist = []
         
@@ -706,7 +885,13 @@ class Switching_Value_Window():
             self.sql_switching_namelist.append([self.Switching_Value_name,i])
         sql.config_switching_value_init(self.sql_switching_namelist)
         '''循环读取开关量数据并加载到后台'''
-           
+    
+    '''
+    函数名称：reflash_switching_value(self)
+    功能描述：开关量刷新函数，配合多线程使用
+    参数意义：无
+    函数调用：protocol_switch.analysis_protocol、Pick_Option_In_Section
+    '''            
     def reflash_switching_value(self):
         self.sql_switching_valuelist = []
         if share_variable.receive_switch_data_str == '':
@@ -721,13 +906,29 @@ class Switching_Value_Window():
                self.dict['%s%s'%('variable',str(self.switching_value_return_list.index(switching_value)))].set(switching_value)
                self.sql_switching_valuelist.append([switching_value,self.switching_value_return_list.index(switching_value)])
         sql.config_switching_value(self.sql_switching_valuelist)
+    '''
+    函数名称：close_win(self)
+    功能描述：窗口关闭时switching_window_name清空
+    参数意义：无
+    函数调用：无
+    ''' 
     def close_win(self):
         share_variable.switching_window_name = ''
         self.switch_win.destroy()
+
 '''
-告警量类
+类名称：Warning_Value_Window()
+功能描述：告警量窗口类
+参数意义：无
+函数调用：无
 '''
 class Warning_Value_Window():
+    '''
+函数名称：__init__(self)
+    功能描述：告警量窗口类初始化
+    参数意义：无
+    函数调用：Common_label_for_setting、common_label
+    '''
     def __init__(self):
         share_variable.warning_window_name = 'warning'
         self.warning_win = tk.Toplevel()
@@ -755,7 +956,12 @@ class Warning_Value_Window():
                 self.sql_warning_namelist.append([self.warning_Value_name,j+i*17])
         sql.config_warning_value_init(self.sql_warning_namelist)                 
         self.warning_win.protocol('WM_DELETE_WINDOW',self.close_win)
-        
+    '''
+    函数名称：reflash_Warning_value(self)
+    功能描述：告警量刷新窗口函数，用于刷新数据，配合多线程使用
+    参数意义：无
+    函数调用：protocol_warning.analysis_protocol、 sql.config_warning_value
+    '''        
     def reflash_Warning_value(self):
         self.sql_warning_valuelist = []
         if share_variable.receive_warning_data_str == '':
@@ -781,14 +987,30 @@ class Warning_Value_Window():
     def close_win(self):
         share_variable.warning_window_name = ''
         self.warning_win.destroy()
+
 '''
-主菜单类
+类名称：main_menu()
+功能描述：主菜单加载函数
+参数意义：无
+函数调用：无
 '''
 class main_menu():
+    '''
+    函数名称：__init__(self,parent)
+    功能描述：菜单初始化
+    参数意义：parent：所在框架
+    函数调用：tk.Menu
+    '''    
     def __init__(self,parent):
         self.parent = parent
         self.menu_main_button = tk.Menu(self.parent)
         self.parent.config(menu = self.menu_main_button)
+    '''
+    函数名称：set_the_menu(self,label_name,menulist,commandlist)
+    功能描述：设定每个菜单下的标签以及绑定的函数
+    参数意义：label_name：菜单名。menulist：标签名列表。commandlist：每个标签绑定的命令名列表
+    函数调用：tk.Menu、add_cascade、add_command
+    ''' 
     def set_the_menu(self,label_name,menulist,commandlist):
         self.label_name = label_name
         self.menulist = menulist
@@ -802,6 +1024,12 @@ class main_menu():
 
     
 #通讯异常状态下所有数据全部置0
+'''
+函数名称：set_analog_quantity_to_zero(frame_2,frame_3)
+功能描述：模拟量数据全部清零（在通信异常状态下回触发）
+参数意义：frame_2：框架2。frame_3：框架3
+函数调用：Common_label_for_setting、common_label、Pick_Section_number
+''' 
 def set_analog_quantity_to_zero(frame_2,frame_3):
     Common_label_frame2 = Common_label_for_setting(frame_2)
     Common_label_frame3 = Common_label_for_setting(frame_3)
@@ -820,10 +1048,20 @@ def set_analog_quantity_to_zero(frame_2,frame_3):
                 Common_label_frame3.common_label('',i+1,2,10,'groove')
             else:
                 Common_label_frame3.common_label(0,i+1,2,10,'groove')
-'''               
-#模拟量名称及数据加载到面板
+                
+'''
+类名称：set_analog_quantity()
+功能描述：模拟量名称及数据加载到面板
+参数意义：无
+函数调用：无
 ''' 
 class set_analog_quantity():
+    '''
+    函数名称：set_analog_quantity()
+    功能描述：模拟量名称及数据加载到面板
+    参数意义：无
+    函数调用：Common_label_for_setting、common_label、sql.config_analog_quantity_init
+    ''' 
     def __init__(self,frame2,frame3):
         self.frame2 = frame2
         self.frame3 = frame3
@@ -923,6 +1161,12 @@ class set_analog_quantity():
                 else:
                     sql_init_data.append([self.label_key,self.label_value[1],self.label_value[2],3])
             sql.config_analog_quantity_init(sql_init_data)
+    '''
+    函数名称：reflash_analog_quantity(self,common_label_dict)
+    功能描述：模拟量刷新函数，配合多线程使用
+    参数意义：common_label_dict：从queue队列获取的模拟量值列表
+    函数调用： sql.config_analog_quantity
+    ''' 
     def reflash_analog_quantity(self,common_label_dict):
         sql_data = []
         if len(common_label_dict) == 9:
@@ -953,10 +1197,21 @@ class set_analog_quantity():
                 self.dict['%s%s%s'%('variable','4',str(j))].set(common_label_dict[j])
                 sql_data.append([common_label_dict[j],list(self.common_label_dict_list[4].keys())[j]])
             sql.config_analog_quantity(sql_data)
+'''
+函数名称：request_for_history_event()
+功能描述：更改轮询状态至状态3，使主线程开始读取历史记录数据
+参数意义：无
+函数调用： tk.messagebox.showinfo
+''' 
 def request_for_history_event():
     share_variable.polling_status = '3'
     tk.messagebox.showinfo('历史数据','数据正在导出中')
-    
+'''
+函数名称：request_for_fault_event()
+功能描述：更改轮询状态至状态4，使主线程开始读取故障点记录数据
+参数意义：无
+函数调用：无
+'''    
 def request_for_fault_event():
     share_variable.polling_status = '4'
     share_variable.fault_status = 'rec1'
@@ -1014,6 +1269,12 @@ def Easter_egg():
 '''
 ##################单精度float值转16进制计算函数######################
 #例：输入2，输出00000040(hex:40000000)
+'''
+函数名称：float_2_hex_2_com(s)
+功能描述：浮点数转单精度float值
+参数意义：s：浮点数
+函数调用：ctypes：处理C语言类型数据的包，可以调用c封装成dll的函数。这东西很有用。
+''' 
 def float_2_hex_2_com(s):
     if s == 0 or s == 0.0:
         return '00000000'
@@ -1026,20 +1287,38 @@ def float_2_hex_2_com(s):
         hex_new_value+=hex_value[i+1]
         hex_new_value+=hex_value[i]
     return hex_new_value
+
 #################数值取反函数#########################
 #data为十进制数字，bit为2进制位数。
+'''
+函数名称：data_reverse(data,bit)
+功能描述：数值取反，10进制转2进制后取反
+参数意义：data：传入的十进制数据。bit：2进制位数
+函数调用：无
+''' 
 def data_reverse(data,bit):                                     #
         clear_bin_list = list(bin(data).lstrip('0b').zfill(bit))      #10进制转2进制字符串,把字符串转换成数组
         clear_bin_str =''.join(list(map(lambda x:str(abs(int(x)-1)),clear_bin_list)))
         return clear_bin_str
 
 ##############单个字符转十进制数值函数###############
-#字符串A转换成对应数字10进制,即'A'→10    
+#字符串A转换成对应数字10进制,即'A'→10   
+'''
+函数名称：str_to_int_ten(data)
+功能描述：16进制转10进制
+参数意义：data：传入的16进制数据
+函数调用：无
+'''
 def str_to_int_ten(data):
     return int('%s%s'%('0x',data),16)
 
 #################十六进制单精度float值转浮点数函数#############
-
+'''
+函数名称：calc_float(data)
+功能描述：根据浮点数格式与IEEE-754标准(32)计算浮点数。
+参数意义：data：传入的8位数值
+函数调用：无
+'''
 def calc_float(data):     
         if len(data)%8 != 0 :
             print("info长度有错误,不是8的倍数")
@@ -1065,6 +1344,12 @@ def calc_float(data):
 ###############校验和生成函数########################
 #函数功能：获取chksum
 #data_str_exclude_chksum：不包括~以及chksum的中间部分
+'''
+函数名称：get_chksum(data_str_exclude_chksum)
+功能描述：计算chksum
+参数意义：data_str_exclude_chksum：不包括chksum的命令
+函数调用：data_reverse
+'''
 def get_chksum(data_str_exclude_chksum):
     sum_chksum = 0   #存储所有字符的十进制和（除去CHKSUM）
     for chksum_i in data_str_exclude_chksum:
@@ -1072,23 +1357,30 @@ def get_chksum(data_str_exclude_chksum):
     sum_chksum_bin = data_reverse(sum_chksum%65535,16)     #默认长度为16位
     sum_chksum_bin = int(sum_chksum_bin,2)
     return hex(sum_chksum_bin+1).lstrip('0x').upper()       #取反+1转16进制去掉'0x'换算成大写，返回校验和
-
-'''
-def set_the_value_from_simpledialog_to_outside(send_value,receive_value):
-    receive_value = send_value
-'''
     
 '''
 -------------------------------------------------------------------------------
 线程类函数定义
 -------------------------------------------------------------------------------
-''' 
-   
+'''
+ 
+'''
+函数名称：RepeatTimer(threading.Timer)
+功能描述：定时器函数，创建新定时器线程，并可设定执行周期和执行函数
+参数意义：threading.Timer：继承的threading模块的Timer类。self.interval：不用关注。*self.args：执行周期（可选参数）。*self.kwargs（执行函数）
+函数调用：
+'''   
 class RepeatTimer(threading.Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args,*self.kwargs)
 
+'''
+函数名称：new_threading()
+功能描述：创建新线程，暂时用不到。
+参数意义：tar：目标函数
+函数调用：threading.Thread
+'''   
 class new_threading():
     def __init__(self,tar):
         self.target = tar
@@ -1096,14 +1388,34 @@ class new_threading():
         thread.start()
 '''
 串口判断，收发数据类(核心)
-'''   
+'''  
+
+'''
+类名称：send_message()
+功能描述：串口数据命令的组成，发送，接收，初步解析。（核心类）
+参数意义：
+函数调用：。。
+'''    
 class send_message():
+    '''
+    函数名称：__init__(self,serial,parent)
+    功能描述：初始化串口对象、UI对象和输出日志对象
+    参数意义：serial：串口对象。parent：UI对象
+    函数调用：无
+    ''' 
     def __init__(self,serial,parent):
         self.ser = serial
         self.parent = parent
         self.massage = ''
         self.logging = logging_file()
         '''串口状态判断'''
+        
+    '''
+    函数名称：judge_ser_status(self,frame2,frame3)
+    功能描述：向串口发送请求指令，判断串口是否有返回。
+    参数意义：frame2、frame3表示框架
+    函数调用：figure_out_available_com
+    ''' 
     def judge_ser_status(self,frame2,frame3):
         self.frame2 = frame2
         self.frame3 = frame3
@@ -1118,8 +1430,12 @@ class send_message():
             return 0
         elif self.ser.isOpen() == True:
             return 1
-        
-        '''可直接用于模拟量'''
+    '''
+    函数名称：assemble_command_for_quantity(self,body)
+    功能描述：对模拟量请求指令进行拼装，返回完整指令赋值给固定变量等待发送。
+    参数意义：body：表示'~'到chksum之前的命令字符串
+    函数调用：get_chksum
+    '''        
     def assemble_command_for_quantity(self,body):
         self.Device_VER = share_variable.Device_VER
         self.Device_ADR = share_variable.Device_ADR
@@ -1128,6 +1444,12 @@ class send_message():
         return self.massage
         
         '''用于密码'''
+    '''
+    函数名称：assemble_command_for_password(self,receive_password)
+    功能描述：对密码请求指令进行拼装，返回完整指令赋值给固定变量等待发送。
+    参数意义：receive_password：从用户输入端得到的密码
+    函数调用：assemble_command_for_quantity
+    '''   
     def assemble_command_for_password(self,receive_password):#receive_password = share_variable
         self.receive_password = receive_password
         if self.receive_password == '':
@@ -1138,6 +1460,12 @@ class send_message():
             return self.massage
             
         '''用于设置量'''
+    '''
+    函数名称：assemble_command_for_setting(self,min_str,res_0,data_0)
+    功能描述：对设置请求指令进行拼装，返回完整指令赋值给固定变量等待发送。
+    参数意义：min_str：固定2A98600A。res_0：用户修改的指令值。data_0：用户修改的值对应cfg指令值
+    函数调用：assemble_command_for_quantity
+    ''' 
     def assemble_command_for_setting(self,min_str,res_0,data_0):  #min_str = '2A98600A' etc.
         self.res_0 = res_0
         self.data_0 = data_0
@@ -1150,6 +1478,12 @@ class send_message():
         
       
         '''组成完整命令并发送'''
+    '''
+    函数名称：assemble_commmand_and_send(self)
+    功能描述：根据业务逻辑轮询串口并发送命令
+    参数意义：
+    函数调用：assemble_command、assemble_command_for_password、receive_inWaiting
+    ''' 
     def assemble_commmand_and_send(self):
         '''判断setting_command表状态'''
         self.setting_command = sql.get_setting_status()
@@ -1221,7 +1555,13 @@ class send_message():
         massage_list_1 = [self.massage_97,self.massage_98,self.massage_99,self.massage_9A,self.massage_84]
         self.receive_inWaiting(massage_list_0,massage_list_1,share_variable.polling_status)
         
-        '''循环发送数据'''    
+        '''循环发送数据'''  
+    '''
+    函数名称：receive_inWaiting(self,massage_list_0,massage_list_1,status)
+    功能描述：循环发送数据具体实现
+    参数意义：massage_list_0：非设置量命令列表。massage_list_1：设置命令量命令列表。status：轮询标志位
+    函数调用：无
+    '''
     def receive_inWaiting(self,massage_list_0,massage_list_1,status): #command = '4F' etc. massage = 'massage_4F' etc.
         '''
         status为轮询状态，status == 0,表明正常轮询(模拟量，设置量)，
@@ -1383,7 +1723,12 @@ class send_message():
             self.ser.write(massage_list_1[4].encode())
             self.logging.print_the_logging(share_variable.Device_CID2,'密码命令下发,send:',massage_list_1[4])
             '''历史记录读取命令下发区'''
-        
+    '''
+    函数名称：read_history_event(self,history_queue)
+    功能描述：读历史记录。
+    参数意义：history_queue：历史记录接收数据队列
+    函数调用：Output_csv_for_history_event
+    '''    
     def read_history_event(self,history_queue):
         '''特殊情况：历史记录(历史记录的格式不符合标准电总协议的数据构成方式，所以需要单独接收判断)'''
         self.data = ''
@@ -1398,7 +1743,12 @@ class send_message():
                 share_variable.polling_status = '0'
                 tk.messagebox.showinfo('导出结果','导出成功！')
                 self.ser.flushInput()
-
+    '''
+    函数名称：read_fault_event(self,fault_queue)
+    功能描述：读故障记录。
+    参数意义：fault_queue：故障点记录接收数据队列
+    函数调用：Output_csv_for_history_event
+    '''    
     def read_fault_event(self,fault_queue):
         '''读取故障点数据'''
         self.output_csv_for_fault = output_csv()
@@ -1418,7 +1768,13 @@ class send_message():
             
             
             
-    '''while循环读取接收到的数据(读取方式有很多,但一个一个的读确实比一次性全部读完要快。)'''    
+    '''while循环读取接收到的数据(读取方式有很多,但一个一个的读确实比一次性全部读完要快。)''' 
+    '''
+    函数名称：read_the_response_data_str(self,queue)
+    功能描述：读其他串口数据，并进行初步解析
+    参数意义：queue：模拟量数据队列
+    函数调用：
+    '''
     def read_the_response_data_str(self,queue):
         '''读取串口中等待的数据,self.data为每次读取的缓存值'''
         self.queue = queue
@@ -1605,6 +1961,13 @@ class send_message():
                  self.ser.flushInput() 
     
     '''快速变量清零函数'''
+    
+    '''
+    函数名称：clear_the_value(self,condition)
+    功能描述：读取完成后需要对临时数据库的部分值和状态进行清零。
+    参数意义：condition：需要清零的情况
+    函数调用：
+    '''    
     def clear_the_value(self,condition):
         self.condition = condition
         '''系统清零'''
@@ -1635,13 +1998,14 @@ class send_message():
             
 '''
 辅助类
-'''            
+'''  
+'''计算chksm'''          
 class calc_chksum():
     def __init__(self):
         self.res = simpledialog.askstring('请输入协议字符串','请输入无开始位(~)\无chksum协议字符串：\n 例如：完整协议：~~10012A4F0000FD91,则输入10012A4F0000')
         self.return_chksum = get_chksum(self.res)
         tk.messagebox.showinfo(title = '返回的CHKSUM值',message = self.return_chksum)
-
+'''计算单精度浮点数'''
 class calc_Single_float():
     def __init__(self):
         self.res = simpledialog.askstring('请输入浮点数','请输入浮点数字符串：\n 例如输入：2.0')
